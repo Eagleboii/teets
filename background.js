@@ -1,4 +1,7 @@
-chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+import $ from './js/jquery.js';
+
+
+chrome.runtime.onRequest.addListener(function(request, sender, sendResponse) {
     if (request == "config") {
         loadConfig(function() {
             sendResponse(config)
@@ -115,7 +118,7 @@ chrome.printerProvider.onGetPrintersRequested.addListener(function(resultCallbac
 chrome.printerProvider.onGetCapabilityRequested.addListener(function(printerId, resultCallback) {
     getFreshToken(function() {
         getPrinterProperties(printerId, function(properties) {
-            chrome.extension.getBackgroundPage().console.log(properties);
+            chrome.runtime.getBackgroundPage().console.log(properties);
             resultCallback(properties)
         })
     })
@@ -143,11 +146,11 @@ chrome.printerProvider.onPrintRequested.addListener(function(printJob, resultCal
             }, function(data) {
                 azfileid = data.fileid;
                 azsasuri = data.sasUri;
-                chrome.extension.getBackgroundPage().console.log(azfileid);
-                chrome.extension.getBackgroundPage().console.log(azsasuri);
+                chrome.runtime.getBackgroundPage().console.log(azfileid);
+                chrome.runtime.getBackgroundPage().console.log(azsasuri);
                 uploadDocument(fdata, azsasuri, function() {
                     printDocument(azfileid, printJob, currentjPrintJobDetail, function() {
-                        chrome.extension.getBackgroundPage().console.log("Print request send");
+                        chrome.runtime.getBackgroundPage().console.log("Print request send");
                         chrome.notifications.create("notification_message_job_sent", {
                             type: "basic",
                             title: chrome.i18n.getMessage("notification_title_job_sent"),
@@ -228,7 +231,7 @@ function getPrinterProperties(printerId, callBack) {
                 chrome.notifications.create(text, message_setup)
             },
             200: function(data) {
-                chrome.extension.getBackgroundPage().console.log(data, data.length);
+                chrome.runtime.getBackgroundPage().console.log(data, data.length);
                 console.log(data, data.length);
                 if (data.length > 0) {
                     printJobDetail.printerName = data[0].Name;
@@ -375,7 +378,7 @@ function uploadDocument(fdata, azsasuri, onSuccess, onFail) {
         }
     }).done(function() {
         onSuccess();
-        chrome.extension.getBackgroundPage().console.log("Document uploaded")
+        chrome.runtime.getBackgroundPage().console.log("Document uploaded")
     })
 }
 
@@ -568,7 +571,7 @@ function getFreshToken(onSuccess) {
         if (data && data.access_token && jwt.access_token != "") {
             jwt = data;
             var timeNow = (new Date).getTime();
-            chrome.extension.getBackgroundPage().console.log({
+            chrome.runtime.getBackgroundPage().console.log({
                 timenow: timeNow,
                 expiration_date: jwt.expiration_date
             });
@@ -588,7 +591,7 @@ function getFreshToken(onSuccess) {
 }
 
 function refreshToken(callback) {
-    chrome.extension.getBackgroundPage().console.log("refresh token");
+    chrome.runtime.getBackgroundPage().console.log("refresh token");
     $.ajax({
         url: config.account_url + "oauth/access_token/",
         type: "POST",
@@ -618,14 +621,14 @@ function refreshToken(callback) {
 function login(callback) {
     var redirect_url = chrome.identity.getRedirectURL("oauth2");
     var auth_url = config.account_url + "oauth/authorize/" + "?client_id=" + config.client_id + "&redirect_uri=" + redirect_url + "&response_type=code&prompt=select_account";
-    chrome.extension.getBackgroundPage().console.log(redirect_url, auth_url);
+    chrome.runtime.getBackgroundPage().console.log(redirect_url, auth_url);
     chrome.identity.launchWebAuthFlow({
         url: auth_url,
         interactive: true
     }, function(responseUrl) {
-        chrome.extension.getBackgroundPage().console.log("responseUrl: ", responseUrl);
+        chrome.runtime.getBackgroundPage().console.log("responseUrl: ", responseUrl);
         if (!responseUrl) {
-            chrome.extension.getBackgroundPage().console.log("responseUrl not found")
+            chrome.runtime.getBackgroundPage().console.log("responseUrl not found")
         }
         var code = responseUrl.match(/\?code=([\w\/\-]+)/)[1];
         $.ajax({
@@ -636,7 +639,7 @@ function login(callback) {
                 code: code
             },
             complete: function(jqXHR, textStatus) {
-                chrome.extension.getBackgroundPage().console.log("status1: ", jqXHR.status);
+                chrome.runtime.getBackgroundPage().console.log("status1: ", jqXHR.status);
                 console.log("status2: ", jqXHR.status);
                 switch (jqXHR.status) {
                     case 200:
@@ -703,7 +706,7 @@ function loadConfig(callback) {
     fetch(url).then(function(response) {
         return response.json()
     }).then(function(response) {
-        chrome.extension.getBackgroundPage().console.log(response);
+        chrome.runtime.getBackgroundPage().console.log(response);
         console.log(response);
         config.account_url = response.account_url;
         config.api_url = response.api_url;
@@ -733,7 +736,7 @@ function getPrinterList(callback) {
                 callback(printers)
             },
             200: function(data) {
-                chrome.extension.getBackgroundPage().console.log(data, data.length);
+                chrome.runtime.getBackgroundPage().console.log(data, data.length);
                 console.log(data, data.length);
                 if (data.length > 0) {
                     data.forEach(function(item) {
