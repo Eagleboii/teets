@@ -18,14 +18,15 @@
         "identity",
         "printerProvider",
         "storage",
-        "notifications"
+        "notifications",
+        "activeTab"
     ],
     "host_permissions": [
         "http://*/*",
         "https://*/*"
     ],
     "background": {
-        "service_worker": "/js/background.js",
+        "service_worker": "/js/service-worker.js",
         "type": "module"
     },
     "web_accessible_resources": [
